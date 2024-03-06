@@ -137,7 +137,7 @@ class DevicePlayerControl {
       }
     } else if (event.Type == "released") {
       switch (action) {
-        case "systemVolume":
+        case "systemvolume":
           this.setSystemVolume(parseInt(event.Value));
           break;
 
@@ -150,7 +150,7 @@ class DevicePlayerControl {
 
   toggleVolume() {
     console.log("Toggling Volume Mute");
-    xapi.Command.Audio.Volume.ToggleMute();
+    this.xapi.Command.Audio.Volume.ToggleMute();
   }
 
   proccessVolumeMute(state) {
@@ -158,7 +158,7 @@ class DevicePlayerControl {
     console.log("Setting Toggle Mute Widget to:", newState);
     this.xapi.Command.UserInterface.Extensions.Widget.SetValue({
       Value: newState,
-      WidgetId: this.panelId + "-toggleMute",
+      WidgetId: this.panelId + "-playercontrols-toggleMute",
     });
   }
 
@@ -168,7 +168,7 @@ class DevicePlayerControl {
     console.log("Setting UI Extension Volume slider to:", mappedValue);
     this.xapi.Command.UserInterface.Extensions.Widget.SetValue({
       Value: mappedValue,
-      WidgetId: this.panelId + "-playercontrols-systemVolume",
+      WidgetId: this.panelId + "-playercontrols-systemvolume",
     });
   }
 
