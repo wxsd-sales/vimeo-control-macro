@@ -27,13 +27,13 @@
  *
  ********************************************************/
 
-/********************************************************
- * DivicePlayerControls:
- * This Class manages the setting up of the JSxAPI Connection
- * and Vimeo Player API controls.
- * 
- * 
- ********************************************************/
+
+/**
+ * This class manages creates a JSxAPI Connection to a
+ * RoomOS device and links it to an embedded Player
+ * @class DevicePlayerControl
+ * @classdesc This is a description of the MyClass class.
+ */
 
 class DevicePlayerControl {
   #status; // Store Status Element
@@ -44,14 +44,21 @@ class DevicePlayerControl {
   #panelId; // Base UI Extension Panel
 
   #title; // Title of video
-  #ticker; // Interval for updating slider
-  #duration; // Video Duration
-  #playRate;
-  #currentTime;
 
-  // Create JSxAPI Connection and Vimeo Player and listen to events
+  // DevicePlayerControl constructor
+  /**
+   * Creates JSxAPI connect to Cisco Device using provided parameters
+   * and loads video from parameter link to the provided player div
+   * and outputs debugging status to the provided div element.
+   * @param  {Object} parameters description
+   * @param  {string} parameters.username Cisco Device Local Account Username
+   * @param  {string} parameters.password Cisco Device Local Account Password
+   * @param  {string} parameters.link Link to Vimeo Video
+   * @param  {string} parameters.panelId Base PanelId to filter events and update widgets
+   * @param  {HTMLDivElement} player [HTML Div Element for Player]
+   * @param  {HTMLDivElement} status [HTML Div Element for Status Notifications]
+   */
   constructor(parameters, player, status) {
-
     console.log("Starting Device Player Controls");
 
     this.player = player;
@@ -89,9 +96,10 @@ class DevicePlayerControl {
           this.proccessVolumeMute.bind(this)
         );
         this.xapi.Status.Audio.Volume.on(this.proccessVolumeChange.bind(this));
-        
-        this.xapi.Status.Audio.Volume.get()
-        .then(this.proccessVolumeChange.bind(this))
+
+        this.xapi.Status.Audio.Volume.get().then(
+          this.proccessVolumeChange.bind(this)
+        );
       });
 
     const options = {
@@ -310,7 +318,8 @@ class DevicePlayerControl {
 }
 
 /********************************************************
- * Miscellaneous Functions
+ * Upon Loading, check and parse URL Hash Parameters
+ * before establishing connection
  ********************************************************/
 
 // If URL Hash Parameters are present, process them and connect
