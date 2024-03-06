@@ -91,7 +91,7 @@ class DevicePlayerControl {
         this.xapi.Status.Audio.Volume.on(this.proccessVolumeChange.bind(this));
         
         this.xapi.Status.Audio.Volume.get()
-        .then(value=>this.proccessVolumeChange(value).bind(this))
+        .then(this.proccessVolumeChange.bind(this))
       });
 
     const options = {
