@@ -37,11 +37,9 @@
 class DevicePlayerControl {
   #status; // Store Status Element
   #statusTimer; // Store Status Visibility Timer
-
   #player; // Store Player Div Element
   #xapi; // Store JSxAPI Connection
   #panelId; // Base UI Extension Panel
-
   #title; // Title of video
 
   // DevicePlayerControl constructor
@@ -57,7 +55,7 @@ class DevicePlayerControl {
    * @param  {HTMLDivElement} player [HTML Div Element for Player]
    * @param  {HTMLDivElement} status [HTML Div Element for Status Notifications]
    */
-  constructor(parameters, playerId, status) {
+  constructor(parameters, player, status) {
     console.log("Starting Device Player Controls");
 
     this.status = status;
@@ -101,22 +99,23 @@ class DevicePlayerControl {
       });
 
     const options = {
-      // width: window.innerWidth,
-      // height: window.innerHeight,
-      width: 1920,
-      height: 1080,
+      width: window.innerWidth,
+      height: window.innerHeight,
       url: parameters.link,
     };
 
     // Load Player and listen for events
-    this.player = new Vimeo.Player(playerId, options);
+    this.player = new Vimeo.Player(player, options);
     this.player.ready().then(this.processPlayerReady.bind(this));
     this.player.on("timeupdate", this.processTimeUpdate.bind(this));
 
+    // Resize the Players iFrame to when the window is resized
     window.addEventListener("resize", () => {
-      const iframe = document.querySelector("iframe")
-      iframe.width = window.innerWidth;
-      iframe.height = window.innerHeight;
+      const iframe = document.querySelector("iframe");
+      if (iframe) {
+        iframe.width = window.innerWidth;
+        iframe.height = window.innerHeight;
+      }
     });
   }
 
@@ -134,41 +133,45 @@ class DevicePlayerControl {
     // Ignore Events from invalid Widgets
     if (category != "playercontrols") return;
 
-    if (event.Type == "clicked") {
-      switch (action) {
-        case "playpause":
-          this.playPause();
-          break;
-        case "stop":
-          this.stopVideo();
-          break;
-        case "fastforward":
-        case "fastback":
-          this.changeRate(action);
-          break;
-        case "toggleMute":
-          this.toggleVolume();
-          break;
-      }
-    } else if (event.Type == "released") {
-      switch (action) {
-        case "systemvolume":
-          this.setSystemVolume(parseInt(event.Value));
-          break;
-
-        case "playTime":
-          this.setPlayTime(parseInt(event.Value));
-          break;
-      }
+    switch (event.Type) {
+      case "clicked":
+        switch (action) {
+          case "playpause":
+            this.playPause();
+            break;
+          case "stop":
+            this.stopVideo();
+            break;
+          case "fastforward":
+          case "fastback":
+            this.changeRate(action);
+            break;
+          case "toggleMute":
+            this.toggleVolume();
+            break;
+        }
+        break;
+      case "released":
+        switch (action) {
+          case "systemvolume":
+            this.setSystemVolume(parseInt(event.Value));
+            break;
+          case "playTime":
+            this.setPlayTime(parseInt(event.Value));
+            break;
+        }
+        break;
     }
   }
 
   toggleVolume() {
+    if (!this.xapi) return;
     console.log("Toggling Volume Mute");
     this.xapi.Command.Audio.Volume.ToggleMute();
   }
 
   proccessVolumeMute(state) {
+    if (!this.xapi) return;
     const newState = state == "On" ? "active" : "inactive";
     console.log("Setting Toggle Mute Widget to:", newState);
     this.xapi.Command.UserInterface.Extensions.Widget.SetValue({
@@ -178,6 +181,7 @@ class DevicePlayerControl {
   }
 
   proccessVolumeChange(value) {
+    if (!this.xapi) return;
     const mappedValue = this.mapBetween(value, 0, 255, 0, 100);
     console.log("System Volume Changed to:", value);
     console.log("Setting UI Extension Volume slider to:", mappedValue);
@@ -188,18 +192,19 @@ class DevicePlayerControl {
   }
 
   setSystemVolume(value) {
+    if (!this.xapi) return;
     const mappedValue = this.mapBetween(value, 0, 100, 0, 255);
     console.log("Setting System Volume to:", mappedValue);
     this.xapi.Command.Audio.Volume.Set({ Level: mappedValue });
   }
 
   async updatePlayTimeUI(seconds, duration) {
+    if (!this.xapi) return;
     const sliderValue = this.mapBetween(seconds, 0, 255, 0, duration);
     const currentTimeText = this.fmtMSS(Math.round(seconds));
     const durationTimeText = this.fmtMSS(Math.round(duration));
     const playTimeText = `[ ${currentTimeText} / ${durationTimeText} ]`;
 
-    if (!this.xapi) return;
     this.xapi.Command.UserInterface.Extensions.Widget.SetValue({
       Value: sliderValue,
       WidgetId: this.panelId + "-playercontrols-playTime",
@@ -209,25 +214,6 @@ class DevicePlayerControl {
       Value: playTimeText,
       WidgetId: this.panelId + "-playTime",
     });
-  }
-
-  async changeRate(direction) {
-    const rates = [0.5, 0.75, 1, 1.25, 2];
-    const currentSpeed = await this.player.getPlaybackRate();
-    const index = rates.findIndex((rate) => rate == currentSpeed);
-
-    if (direction == "fastforward" && index != rates.length - 1) {
-      console.log("Changing Play Rate to:", rates[index + 1]);
-      this.player.setPlaybackRate(rates[index + 1]);
-    } else if (direction == "fastback" && index != 0) {
-      console.log("Changing Play Rate to:", rates[index - 1]);
-      this.player.setPlaybackRate(rates[index - 1]);
-    } else {
-      console.log(
-        "Play Rate cannot be",
-        direction == "fastforward" ? "increased" : "decreased"
-      );
-    }
   }
 
   async updateTitle() {
@@ -282,6 +268,25 @@ class DevicePlayerControl {
     this.player.setCurrentTime(0);
   }
 
+  async changeRate(direction) {
+    const rates = [0.5, 0.75, 1, 1.25, 2];
+    const currentSpeed = await this.player.getPlaybackRate();
+    const index = rates.findIndex((rate) => rate == currentSpeed);
+
+    if (direction == "fastforward" && index != rates.length - 1) {
+      console.log("Changing Play Rate to:", rates[index + 1]);
+      this.player.setPlaybackRate(rates[index + 1]);
+    } else if (direction == "fastback" && index != 0) {
+      console.log("Changing Play Rate to:", rates[index - 1]);
+      this.player.setPlaybackRate(rates[index - 1]);
+    } else {
+      console.log(
+        "Play Rate cannot be",
+        direction == "fastforward" ? "increased" : "decreased"
+      );
+    }
+  }
+
   /********************************************************
    * Miscellaneous Functions
    ********************************************************/
@@ -327,6 +332,8 @@ class DevicePlayerControl {
  * before establishing connection
  ********************************************************/
 
+const statusDiv = document.getElementById("status");
+
 // If URL Hash Parameters are present, process them and connect
 if (window.location.hash) {
   // Get URL Hash Parameters
@@ -338,6 +345,7 @@ if (window.location.hash) {
 
   // Verify all required paremeters are present
   const required = ["username", "password", "ipAddress", "panelId", "link"];
+  let missing = [];
   let verified = true;
   for (let i = 0; i < required.length; i++) {
     if (required[i] in parameters) {
@@ -347,13 +355,24 @@ if (window.location.hash) {
     } else {
       // If missing a parameter, don't load
       console.warn("Missing Hash Parameter:", required[i]);
+      missing.push(required[i]);
       verified = false;
     }
   }
 
-  const status = document.getElementById("status");
-
   if (verified) {
-    const controller = new DevicePlayerControl(parameters, "player", status);
+    const controller = new DevicePlayerControl(
+      parameters,
+      "player",
+      statusDiv
+    );
+  } else {
+    this.statusDiv.style.background = "red";
+    this.statusDiv.style.visibility = "visible";
+    (this.statusDiv.innerHTML = "Missing Parameters:"), missing;
   }
+} else {
+  this.statusDiv.style.background = "red";
+  this.statusDiv.style.visibility = "visible";
+  this.statusDiv.innerHTML = "Missing Hash Parameters";
 }
