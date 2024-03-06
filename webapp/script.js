@@ -27,7 +27,6 @@
  *
  ********************************************************/
 
-
 /**
  * This class manages creates a JSxAPI Connection to a
  * RoomOS device and links it to an embedded Player
@@ -58,10 +57,9 @@ class DevicePlayerControl {
    * @param  {HTMLDivElement} player [HTML Div Element for Player]
    * @param  {HTMLDivElement} status [HTML Div Element for Status Notifications]
    */
-  constructor(parameters, player, status) {
+  constructor(parameters, playerId, status) {
     console.log("Starting Device Player Controls");
 
-    this.player = player;
     this.status = status;
     this.panelId = parameters.panelId;
 
@@ -103,21 +101,27 @@ class DevicePlayerControl {
       });
 
     const options = {
-      width: window.innerWidth,
-      height: window.innerHeight,
+      // width: window.innerWidth,
+      // height: window.innerHeight,
+      width: 1920,
+      height: 1080,
       url: parameters.link,
     };
 
     // Load Player and listen for events
-    this.player = new Vimeo.Player("player", options);
+    this.player = new Vimeo.Player(playerId, options);
     this.player.ready().then(this.processPlayerReady.bind(this));
     this.player.on("timeupdate", this.processTimeUpdate.bind(this));
+
+    window.addEventListener("resize", () => {
+      const iframe = document.querySelector("iframe")
+      iframe.width = window.innerWidth;
+      iframe.height = window.innerHeight;
+    });
   }
 
   /********************************************************
-   *
    * Functions for handling UI Extension Events and Update
-   *
    ********************************************************/
 
   // Process Widget Events
@@ -195,6 +199,7 @@ class DevicePlayerControl {
     const durationTimeText = this.fmtMSS(Math.round(duration));
     const playTimeText = `[ ${currentTimeText} / ${durationTimeText} ]`;
 
+    if (!this.xapi) return;
     this.xapi.Command.UserInterface.Extensions.Widget.SetValue({
       Value: sliderValue,
       WidgetId: this.panelId + "-playercontrols-playTime",
@@ -347,9 +352,8 @@ if (window.location.hash) {
   }
 
   const status = document.getElementById("status");
-  const player = document.getElementById("player");
 
   if (verified) {
-    const controller = new DevicePlayerControl(parameters, player, status);
+    const controller = new DevicePlayerControl(parameters, "player", status);
   }
 }
