@@ -1,7 +1,6 @@
 # Insert Repo Name Here
 
-This is an example macro and Web App which demonstrates how to control an embedded Vimeo player on a RoomOS Device
-
+This is an example macro and companion Web App which demonstrates how to control an embedded Vimeo player on a RoomOS Device for paired Controller ( either Touch 10" or Room Navigator).
 
 
 ## Overview
@@ -17,29 +16,31 @@ Go into detail about the implementation.   3-4 Sentences
 ![image/gif](insert img link here)
 
 
-
 ## Setup
 
 ### Prerequisites & Dependencies: 
 
-- Is this dependant on having another repo
-- Insert pre-requisites in bullets
-- Insert pre-requisite here  Also state any assumptions that you may have made about the user.
-- Limit nested bullets
-
-
-<!-- GETTING STARTED -->
+- Webex Device running RoomOS 10.8 or above
+- Paired Touch 10" or Room Navigator in Controller mode
+- Device Web Admin or Control Hub access to enable and upload the Macro
+- (Optional) Web Server to host the example embedded player Web App for Domain restricted Vimeo links
 
 ### Installation Steps:
-1.  Include step one here
-    ```sh
-    insert line of code here if applicable
-    ```
-2.  Insert step two here
-    Insert screenshot, if applicable
-    
-    
-    
+
+1. Download the ``vimeo-macro.js`` file and upload it to your Webex Room device.
+2. Configure the Macro by changing the initial values, there are comments explaining each one.
+3. Enable the Macro.
+
+## Validation
+
+Validated Hardware:
+
+* Webex Room Kit Pro with Touch 10
+* Webex Desk Pro with Room Navigator
+* Board 55 with Touch 10
+
+This macro should work on other Webex Devices but has not been validated at this time.
+
 ## Demo
 
 *For more demos & PoCs like this, check out our [Webex Labs site](https://collabtoolbox.cisco.com/webex-labs).
