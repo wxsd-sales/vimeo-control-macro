@@ -1,4 +1,4 @@
-# Insert Repo Name Here
+# Vimeo Control Macro
 
 This is an example macro and companion Web App which demonstrates how to control an embedded Vimeo player on a RoomOS Device for paired Controller ( either Touch 10" or Room Navigator).
 
@@ -8,12 +8,7 @@ This is an example macro and companion Web App which demonstrates how to control
 Go into detail about the implementation.   3-4 Sentences
 **HOW** the implementation works. You need not give end-to-end details but an overview.
 
-
-
 ### Flow Diagram
-
-<!-- *MANDATORY*  Insert Your Flow Diagram Here (if small PoC, alternative option is to include break down how it works here instead of diagram) -->
-![image/gif](insert img link here)
 
 
 ## Setup
@@ -27,7 +22,7 @@ Go into detail about the implementation.   3-4 Sentences
 
 ### Installation Steps:
 
-1. Download the ``vimeo-macro.js`` file and upload it to your Webex Room device.
+1. Download the ``vimeo-local-macro.js`` or ``vimeo-server-macro.js``file and upload it to your Webex Device.
 2. Configure the Macro by changing the initial values, there are comments explaining each one.
 3. Enable the Macro.
 
