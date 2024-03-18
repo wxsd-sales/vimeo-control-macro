@@ -5,11 +5,9 @@ This is an example macro and companion Web App which demonstrates how to control
 
 ## Overview
 
-Go into detail about the implementation.   3-4 Sentences
-**HOW** the implementation works. You need not give end-to-end details but an overview.
+This macro lets you configure a list of Vimeo links which are displayed on a devices OSD, Room Navigator and OSD.
 
-### Flow Diagram
-
+In the case of Cisco Devices with a paired Navigator and OSD, the macro also lets you control the Viemo playback via a local WebSocket connection estabilished by the open Web App player.
 
 ## Setup
 
