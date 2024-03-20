@@ -51,7 +51,7 @@ const config = {
     closeContentWithPanel: false, // Automatically close any open content when the panel closes
   },
   embeddedPlayerUrl:
-    "https://wxsd-sales.github.io/vimeo-control-macro/index.html",
+    "https://wxsd-sales.github.io/vimeo-control-macro/webapp/index.html",
   content: [
     {
       title: "Families visit residents via Webex",
@@ -110,7 +110,7 @@ async function init(webengineMode) {
     deleteAccount();
   }
 
-  createPanel();
+  createPanel('content');
   xapi.Event.UserInterface.Extensions.Widget.Action.on(processWidget);
   xapi.Event.UserInterface.Extensions.Event.PageClosed.on((event) => {
     if (!event.PageId.startsWith(config.panelId)) return;
@@ -120,7 +120,7 @@ async function init(webengineMode) {
       if (value == 1) return;
       console.log("Panel Closed - cleaning up");
       closeWebview();
-      createPanel();
+      createPanel('content');
       deleteAccount();
     });
   });
@@ -255,12 +255,11 @@ async function processWidget(e) {
     case "selection":
       if (e.Type != "clicked") return;
       openWebview(config.content[option]);
-      const controls = config.content[option].controls;
-      createPanel(config.content[option].controls);
+      createPanel('playercontrols');
       break;
     case "close":
       closeWebview();
-      createPanel();
+      createPanel('content');
       break;
   }
 }
@@ -303,13 +302,20 @@ async function processWebViews(event) {
 }
 
 async function createPanel(state) {
+
+
   const button = config.button;
-  const content = config.content;
   const panelId = config.panelId;
+  const content = config.content;
+
+  console.log(`Creating Panel [${panelId}] - state [${state}]`);
+
+  const mtr = await xapi.Command.MicrosoftTeams.List({ Show: 'Installed' })
+    .catch(err => false)
 
   let pageName = config.button.title;
 
-  console.log(`Creating Panel [${panelId}]`);
+  
   let rows = "";
 
   function widget(id, type, name, options) {
@@ -324,91 +330,99 @@ async function createPanel(state) {
       : `<Row>${widgets}</Row>`;
   }
 
-  if (state) {
-    pageName = "Player Controls";
-    rows = rows.concat(
-      row(widget("close", "Button", "Close Content", "size=2"))
-    );
 
-    switch (state) {
-      case "playcontrols":
-        rows = rows.concat(
-          row(
-            widget(
-              "title",
-              "Text",
-              "Playback Controls",
-              "size=4;fontSize=normal;align=center"
-            )
+  switch (state) {
+    case "playercontrols":
+      pageName = "Player Controls";
+      rows = rows.concat(
+        row(widget("close", "Button", "Close Content", "size=2"))
+      );
+      rows = rows.concat(
+        row(
+          widget(
+            "title",
+            "Text",
+            "Playback Controls",
+            "size=4;fontSize=normal;align=center"
           )
-        );
-        rows = rows.concat(
-          row(
-            widget(
-              "playTime",
-              "Text",
-              "Loading...",
-              "size=2;fontSize=normal;align=center"
-            )
-          )
-        );
-        rows = rows.concat(
-          row(widget("playercontrols-playTime", "Slider", "", "size=4"))
-        );
-        rows = rows.concat(
-          row([
-            widget(
-              "playercontrols-playpause",
-              "Button",
-              "",
-              "size=1;icon=play_pause"
-            ),
-            widget("playercontrols-stop", "Button", "", "size=1;icon=stop"),
-            widget(
-              "playercontrols-fastback",
-              "Button",
-              "",
-              "size=1;icon=fast_bw"
-            ),
-            widget(
-              "playercontrols-fastforward",
-              "Button",
-              "",
-              "size=1;icon=fast_fw"
-            ),
-          ])
-        );
-        rows = rows.concat(
-          row([
-            widget(
-              "playercontrols-toggleMute",
-              "Button",
-              "",
-              "size=1;icon=volume_muted"
-            ),
-            widget("playercontrols-volumeSlider", "Slider", "", "size=3"),
-          ])
-        );
-        break;
-    }
-  } else {
-    if (content == undefined || content.length < 0) {
-      console.log(`No content available to show for [${panelId}]`);
-      rows = row(
-        widget(
-          "no-content",
-          "Text",
-          "No Content Available",
-          "size=4;fontSize=normal;align=center"
         )
       );
-    } else {
-      for (let i = 0; i < content.length; i++) {
-        rows = rows.concat(
-          row(widget(`selection-${i}`, "Button", content[i].title, "size=4"))
+      rows = rows.concat(
+        row(
+          widget(
+            "playTime",
+            "Text",
+            "Loading...",
+            "size=2;fontSize=normal;align=center"
+          )
+        )
+      );
+      rows = rows.concat(
+        row(widget("playercontrols-playTime", "Slider", "", "size=4"))
+      );
+      rows = rows.concat(
+        row([
+          widget(
+            "playercontrols-playpause",
+            "Button",
+            "",
+            "size=1;icon=play_pause"
+          ),
+          widget("playercontrols-stop", "Button", "", "size=1;icon=stop"),
+          widget(
+            "playercontrols-fastback",
+            "Button",
+            "",
+            "size=1;icon=fast_bw"
+          ),
+          widget(
+            "playercontrols-fastforward",
+            "Button",
+            "",
+            "size=1;icon=fast_fw"
+          ),
+        ])
+      );
+      rows = rows.concat(
+        row([
+          widget(
+            "playercontrols-toggleMute",
+            "Button",
+            "",
+            "size=1;icon=volume_muted"
+          ),
+          widget("playercontrols-systemvolume", "Slider", "", "size=3"),
+        ])
+      );
+      break;
+    case "content":
+      if (content == undefined || content.length < 0) {
+        console.log(`No content available to show for [${panelId}]`);
+        rows = row(
+          widget(
+            "no-content",
+            "Text",
+            "No Content Available",
+            "size=4;fontSize=normal;align=center"
+          )
         );
+      } else {
+        for (let i = 0; i < content.length; i++) {
+          rows = rows.concat(
+            row(
+              widget(`selection-${i}`, "Button", content[i].title, "size=4")
+            )
+          );
+        }
       }
-    }
+  }
+
+  let location = '';
+  if(mtr){
+    location = `<Location>ControlPanel</Location>`
+  }else {
+    location = `<Location>${button.showInCall ? "HomeScreenAndCallControls" : "HomeScreen"}</Location>
+                <Type>${button.showInCall ? "Statusbar" : "Home"}</Type>`
   }
 
   let order = "";
@@ -417,10 +431,7 @@ async function createPanel(state) {
 
   const panel = `
     <Extensions><Panel>
-      <Location>${
-        button.showInCall ? "HomeScreenAndCallControls" : "HomeScreen"
-      }</Location>
-      <Type>${button.showInCall ? "Statusbar" : "Home"}</Type>
+      ${location}
       <Icon>${button.icon}</Icon>
       <Color>${button.color}</Color>
       <Name>${button.name}</Name>
@@ -434,11 +445,14 @@ async function createPanel(state) {
       </Page>
     </Panel></Extensions>`;
 
+    console.log(panel)
+
   return xapi.Command.UserInterface.Extensions.Panel.Save(
     { PanelId: panelId },
     panel
   );
 }
+
 
 async function panelOrder(panelId) {
   const list = await xapi.Command.UserInterface.Extensions.List({
